@@ -1,1 +1,2 @@
 spotipy==2.25.1
+pytest==9.0.1
