@@ -12,6 +12,10 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      SPOTIPY_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      SPOTIPY_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      SPOTIPY_REDIRECT_URI: ${{ secrets.CLIENT_REDIRECT_URI }}
 
     steps:
       - name: Checkout code
@@ -41,13 +45,7 @@ jobs:
         with:
           key: venv-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
           path: .venv
-
-      - name: Import Spotify dev app credentials
-        env:
-          SPOTIPY_CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          SPOTIPY_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          SPOTIPY_REDIRECT_URI: ${{ secrets.CLIENT_REDIRECT_URI }}
-        run: echo "Spotify credentials imported."
-
       - name: Run tests
-        run: python -m pytest tests/
+        run: |
+          source .venv/bin/activate
+          python -m pytest tests/
