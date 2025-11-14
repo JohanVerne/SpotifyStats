@@ -50,4 +50,4 @@ jobs:
         run: echo "Spotify credentials imported."
 
       - name: Run tests
-        run: pip -m pytest tests/
+        run: python -m pytest tests/
