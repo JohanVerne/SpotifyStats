@@ -206,13 +206,10 @@ class TestGetUserDataExtended:
         mock_songs.return_value = {"short_term": {}, "long_term": {}}
         mock_albums.return_value = {"0": {"name": "Album", "artist": "Artist"}}
 
-        statsCollector.userDataJson = {}
-        statsCollector.get_user_data(mock_spotify)
+        result = statsCollector.get_user_data(mock_spotify)
 
-        # This assertion will FAIL with current code - albums not assigned
-        # The bug is in line: get_user_last_listenedTo_albums(sp) without assignment
-        assert "last_albums" in statsCollector.userDataJson
-        assert statsCollector.userDataJson["last_albums"] == mock_albums.return_value
+        assert "last_albums" in result
+        assert result["last_albums"] == mock_albums.return_value
 
     def test_get_user_data_preserves_return_values(self, mocker, mock_spotify):
         """Test that get_user_data doesn't modify returned data"""
@@ -228,12 +225,12 @@ class TestGetUserDataExtended:
         mock_songs.return_value = songs_data
         mock_albums.return_value = albums_data
 
-        statsCollector.userDataJson = {}
-        statsCollector.get_user_data(mock_spotify)
+        result = statsCollector.get_user_data(mock_spotify)
 
         # Verify data integrity
-        assert statsCollector.userDataJson["top_artists"] == artists_data
-        assert statsCollector.userDataJson["top_songs"] == songs_data
+        assert result["top_artists"] == artists_data
+        assert result["top_songs"] == songs_data
+        assert result["last_albums"] == albums_data
 
 
 class TestErrorHandling:
