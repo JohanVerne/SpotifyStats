@@ -14,30 +14,48 @@ A serverless API that collects your Spotify listening statistics using the spoti
 
 [To deploy this solution for your own needs, jump to THIS section](#deployment-guide)
 
-## Project Goal
+## Endpoints preview
 
-Create a lightweight, serverless API that:
+Use the `/stats` endpoint to access the images API
 
-- Fetches personalized Spotify statistics (top artists, top tracks, recently saved albums)
-- Serves a stats card via HTTP endpoints
-- Can be called from GitHub READMEs to display dynamic infographics
-- Runs entirely on Vercel's free serverless platform
+| Parameters | Description                                     | Possible values                         | Default values |
+| ---------- | ----------------------------------------------- | --------------------------------------- | -------------- |
+| `type`     | Select the stat to display (only one per query) | `artists`, `top_songs` or `last_albums` | `artists`      |
+| `range`    | Select the time range of selection              | `short_term` or `long_term`             | `short_term`   |
 
-## Features
+You can also une the `/json` endpoint to access the raw Spotify data as JSON.
 
-### Current Implementation
+### Use examples
 
-- **Top Artists**: Retrieves your top 5 artists for both short-term and long-term listening periods
-- **Top Songs**: Fetches your top 5 tracks with album art and artist information
-- **Recently Saved Albums**: Gets your 3 most recently saved albums
-- **Serverless Deployment**: Runs on Vercel with automatic scaling
-- **OAuth Authentication**: Uses Spotify refresh tokens for persistent access
-- **Comprehensive Tests**: Full pytest suite with mocking for CI/CD
+#### Favorite recent artists
 
-### API Endpoints
+```
+stats?type=artists&range=short_term
+```
 
-- `GET /` - Home endpoint with basic information
-- `GET /stats` - Returns image with all your Spotify statistics
+<a href="https://github.com/JohanVerne/SpotifyREADMEStats">
+    <img src="https://spotify-stats-rose.vercel.app/stats?type=artists&range=short_term", alt="Top Artists Recent" />
+</a>
+
+#### Most listened-to songs ever
+
+```
+stats?type=top_songs&range=long_term
+```
+
+<a href="https://github.com/JohanVerne/SpotifyREADMEStats">
+    <img src="https://spotify-stats-rose.vercel.app/stats?type=top_songs&range=long_term", alt="Top Songs All-Time" />
+</a>
+
+#### Last played albums
+
+```
+stats?type=last_albums
+```
+
+<a href="https://github.com/JohanVerne/SpotifyREADMEStats">
+    <img src="https://spotify-stats-rose.vercel.app/stats?type=last_albums", alt="Last Albums" />
+</a>
 
 ## Deployment Guide
 
@@ -129,18 +147,22 @@ Once deployed, Vercel will give you a URL like `https://your-project.vercel.app`
 Test your API:
 
 ```bash
-curl https://your-project.vercel.app/stats
+curl https://your-project.vercel.app/json
 ```
 
-You should receive JSON with your Spotify statistics!
+You should get a JSON with your Spotify statistics!
 
 ### Step 6: Use in Your GitHub README
 
 Add the following to any GitHub README to display your stats:
 
-```markdown
-! ADD finished URI !
+```html
+<a href="https://github.com/JohanVerne/SpotifyREADMEStats">
+  <img src="https://YOUR_VERCEL_DOMAIN_vercel.app/stats?PARAMS" />
+</a>
 ```
+
+Replace YOUR_VERCEL_DOMAIN with the name of your API, present in your Vercel project dashboard, and PARAMS with the parameters [listed here](#endpoints-preview)
 
 ## Try out locally
 

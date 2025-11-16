@@ -162,7 +162,7 @@ def create_spotify_infographic(
             data = stats_data.get("top_songs", {}).get("long_term", {})
 
     elif section_type == "last_albums":
-        title = "Recently Saved Albums"
+        title = "Last Played Albums"
         data = stats_data.get("last_albums", {})
     else:
         return None
