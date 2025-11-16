@@ -181,7 +181,15 @@ class TestGetUserLastListenedToAlbumsExtended:
     def test_get_user_last_listenedTo_albums_handles_empty_artists(self, mock_spotify):
         """Test that function handles albums with no artists"""
         mock_spotify.current_user_saved_albums.return_value = {
-            "items": [{"album": {"name": "Test Album", "artists": []}}]
+            "items": [
+                {
+                    "album": {
+                        "name": "Test Album",
+                        "artists": [],
+                        "images": [{"url": "http://test.com/img.jpg"}],
+                    }
+                }
+            ]
         }
 
         # This should raise an IndexError with current implementation
@@ -192,8 +200,20 @@ class TestGetUserLastListenedToAlbumsExtended:
         """Test that function returns dictionary with integer keys"""
         mock_spotify.current_user_saved_albums.return_value = {
             "items": [
-                {"album": {"name": "Album 1", "artists": [{"name": "Artist 1"}]}},
-                {"album": {"name": "Album 2", "artists": [{"name": "Artist 2"}]}},
+                {
+                    "album": {
+                        "name": "Album 1",
+                        "artists": [{"name": "Artist 1"}],
+                        "images": [{"url": "http://test.com/img1.jpg"}],
+                    }
+                },
+                {
+                    "album": {
+                        "name": "Album 2",
+                        "artists": [{"name": "Artist 2"}],
+                        "images": [{"url": "http://test.com/img2.jpg"}],
+                    }
+                },
             ]
         }
 
@@ -229,7 +249,13 @@ class TestGetUserDataExtended:
 
         mock_artists.return_value = {"short_term": {}, "long_term": {}}
         mock_songs.return_value = {"short_term": {}, "long_term": {}}
-        mock_albums.return_value = {"0": {"name": "Album", "artist": "Artist"}}
+        mock_albums.return_value = {
+            "0": {
+                "name": "Album",
+                "artist": "Artist",
+                "image": "http://test.com/img.jpg",
+            }
+        }
 
         result = statsCollector.get_user_data(mock_spotify)
 
@@ -244,7 +270,7 @@ class TestGetUserDataExtended:
 
         artists_data = {"short_term": {"0": {"name": "A"}}, "long_term": {}}
         songs_data = {"short_term": {"0": {"name": "S"}}, "long_term": {}}
-        albums_data = {"0": {"name": "Album"}}
+        albums_data = {"0": {"name": "Album", "image": "http://test.com/img.jpg"}}
 
         mock_artists.return_value = artists_data
         mock_songs.return_value = songs_data
@@ -365,7 +391,13 @@ class TestDataIntegrity:
         """Test that returned album data has expected structure"""
         mock_spotify.current_user_saved_albums.return_value = {
             "items": [
-                {"album": {"name": "Test Album", "artists": [{"name": "Test Artist"}]}}
+                {
+                    "album": {
+                        "name": "Test Album",
+                        "artists": [{"name": "Test Artist"}],
+                        "images": [{"url": "http://example.com/img.jpg"}],
+                    }
+                }
             ]
         }
 
@@ -377,6 +409,7 @@ class TestDataIntegrity:
             item = result[0]
             assert "name" in item
             assert "artist" in item
+            assert "image" in item
             assert isinstance(item["name"], str)
             assert isinstance(item["artist"], str)
 

@@ -20,7 +20,15 @@ def get_stats():
 def create_stats_image():
     stats = statsCollector.main()
     requestedContentType = request.args.get("type", None)
+    if requestedContentType not in [
+        "artists",
+        "top_songs",
+        "last_albums",
+    ]:
+        requestedContentType = "artists"
     requestedContentTimerange = request.args.get("range", None)
+    if requestedContentTimerange not in ["short_term", "long_term"]:
+        requestedContentTimerange = "short_term"
     svgImage = statsImageGenerator.create_spotify_infographic(
         stats, requestedContentType, requestedContentTimerange
     )
