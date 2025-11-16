@@ -2,10 +2,8 @@ import base64
 import requests
 
 
+# Fetch an image from URL and convert to base64 data URI to bypass Github hotlinking restrictions
 def fetch_image_as_base64(url):
-    """
-    Fetch an image from URL and convert to base64 data URI
-    """
     try:
         response = requests.get(url, timeout=5)
         response.raise_for_status()
@@ -19,6 +17,29 @@ def fetch_image_as_base64(url):
         return None
 
 
+# Wrap text to fit within max_width characters, returns list of lines
+def wrap_text(text, max_width):
+    words = text.split()
+    lines = []
+    current_line = []
+    current_length = 0
+
+    for word in words:
+        if current_length + len(word) + len(current_line) <= max_width:
+            current_line.append(word)
+            current_length += len(word)
+        else:
+            if current_line:
+                lines.append(" ".join(current_line))
+            current_line = [word]
+            current_length = len(word)
+
+    if current_line:
+        lines.append(" ".join(current_line))
+
+    return lines[:2]  # Max 2 lines
+
+
 # Create an SVG infographic for the requested content type and time range
 def create_spotify_infographic(
     stats_data: dict, section_type: str = "artists", time_range: str = "short_term"
@@ -28,31 +49,31 @@ def create_spotify_infographic(
     if section_type == "last_albums":
         num_columns = 3
         num_items = 3
-        card_width = 140
-        card_height = 200
+        card_width = 150
+        card_height = 230
     else:  # artists or songs
         num_columns = 5
         num_items = 5
-        card_width = 120
-        card_height = 180
+        card_width = 130
+        card_height = 210
 
-    # Calculate SVG dimensions
-    padding = 15
-    card_spacing = 10
-    title_height = 60
+    # Calculate SVG dimensions - COMPACT
+    padding = 12
+    card_spacing = 8
+    title_height = 55
     total_width = (
         (card_width * num_columns) + (card_spacing * (num_columns - 1)) + (padding * 2)
     )
     total_height = card_height + title_height + padding
 
-    # SVG header with INLINE styles (no external fonts)
+    # SVG header with enhanced styles
     svg_header = f"""<svg width="{total_width}" height="{total_height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <style type="text/css">
             .title {{ 
                 fill: #1DB954; 
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; 
-                font-size: 24px; 
+                font-size: 22px; 
                 font-weight: 700; 
             }}
             .subtitle {{
@@ -65,7 +86,8 @@ def create_spotify_infographic(
                 fill: #FFFFFF; 
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
                 font-size: 11px; 
-                font-weight: 600; 
+                font-weight: 600;
+                line-height: 1.3;
             }}
             .card-subtitle {{ 
                 fill: #B3B3B3; 
@@ -74,30 +96,47 @@ def create_spotify_infographic(
                 font-weight: 400; 
             }}
         </style>
-        <!-- Gradient for background -->
+        <!-- Dark gradient background -->
         <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#191414;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#121212;stop-opacity:1" />
+            <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0a0a0a;stop-opacity:1" />
         </linearGradient>
-        <!-- Card shadow filter -->
-        <filter id="cardShadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+        <!-- Card gradient -->
+        <linearGradient id="cardGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#2a2a2a;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#1e1e1e;stop-opacity:1" />
+        </linearGradient>
+        <!-- Green accent gradient for hover effect -->
+        <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1DB954;stop-opacity:0.15" />
+            <stop offset="100%" style="stop-color:#1ed760;stop-opacity:0.05" />
+        </linearGradient>
+        <!-- Subtle glow effect -->
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur"/>
+            <feComponentTransfer in="blur" result="glow">
+                <feFuncA type="linear" slope="1.5"/>
+            </feComponentTransfer>
+            <feMerge>
+                <feMergeNode in="glow"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+        <!-- Card shadow -->
+        <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
             <feOffset dx="0" dy="2" result="offsetblur"/>
             <feComponentTransfer>
-                <feFuncA type="linear" slope="0.2"/>
+                <feFuncA type="linear" slope="0.3"/>
             </feComponentTransfer>
             <feMerge>
                 <feMergeNode/>
                 <feMergeNode in="SourceGraphic"/>
             </feMerge>
         </filter>
-        <!-- Clip path for rounded images -->
-        <clipPath id="roundedImage">
-            <rect width="100%" height="100%" rx="6" ry="6"/>
-        </clipPath>
     </defs>
     
-    <!-- Background -->
+    <!-- Background with gradient -->
     <rect width="{total_width}" height="{total_height}" fill="url(#bgGradient)"/>
     """
 
@@ -131,10 +170,12 @@ def create_spotify_infographic(
     else:
         return None
 
-    # Add title
+    # Add title with glow
     svg_content += f"""
-    <text x="{padding}" y="35" class="title">{title}</text>
-    <text x="{padding}" y="50" class="subtitle">{subtitle}</text>
+    <g filter="url(#glow)">
+        <text x="{padding}" y="32" class="title">{title}</text>
+    </g>
+    <text x="{padding}" y="47" class="subtitle">{subtitle}</text>
     """
 
     # Create cards
@@ -150,35 +191,35 @@ def create_spotify_infographic(
         name = item.get("name", "Unknown")
         image_url = item.get("image", None)
 
-        # Truncate long names
-        max_chars = 14 if section_type == "last_albums" else 12
-        display_name = name if len(name) <= max_chars else name[: max_chars - 2] + ".."
+        # Wrap text instead of truncating
+        max_chars = 18 if section_type == "last_albums" else 16
+        name_lines = wrap_text(name, max_chars)
 
         if section_type == "artists":
             subtitle_text = item.get("genre", "Unknown")
-            subtitle_text = (
-                subtitle_text
-                if len(subtitle_text) <= max_chars
-                else subtitle_text[: max_chars - 2] + ".."
-            )
+            subtitle_lines = wrap_text(subtitle_text, max_chars)
         else:
             artist_name = item.get("artist", "Unknown")
-            subtitle_text = (
-                artist_name
-                if len(artist_name) <= max_chars
-                else artist_name[: max_chars - 2] + ".."
-            )
+            subtitle_lines = wrap_text(artist_name, max_chars)
 
         # Image dimensions
         img_size = card_width - 16
         img_y_offset = 8
 
-        # Card container with shadow
+        # Card container with shadow and gradient
         svg_content += f"""
     <g class="card" filter="url(#cardShadow)">
-        <!-- Card background -->
+        <!-- Card background with gradient -->
         <rect x="{x}" y="{y}" width="{card_width}" height="{card_height}" 
-              fill="#282828" rx="8" ry="8"/>
+              fill="url(#cardGradient)" rx="10" ry="10"/>
+        
+        <!-- Subtle accent overlay -->
+        <rect x="{x}" y="{y}" width="{card_width}" height="{card_height}" 
+              fill="url(#accentGradient)" rx="10" ry="10" opacity="0.3"/>
+        
+        <!-- Top accent line -->
+        <rect x="{x}" y="{y}" width="{card_width}" height="2" 
+              fill="#1DB954" rx="10" ry="10" opacity="0.6"/>
         """
 
         # Fetch and embed image as base64 if available
@@ -189,36 +230,46 @@ def create_spotify_infographic(
         <!-- Album/Artist Image (embedded as base64) -->
         <image x="{x + 8}" y="{y + img_y_offset}" width="{img_size}" height="{img_size}" 
                href="{base64_image}" preserveAspectRatio="xMidYMid slice"
-               style="clip-path: inset(0% round 6px);"/>
+               style="clip-path: inset(0% round 8px);"/>
         """
             else:
                 # Placeholder if image fetch failed
                 svg_content += f"""
         <rect x="{x + 8}" y="{y + img_y_offset}" width="{img_size}" height="{img_size}" 
-              fill="#404040" rx="6" ry="6"/>
+              fill="#333333" rx="8" ry="8"/>
+        <text x="{x + card_width/2}" y="{y + img_y_offset + img_size/2}" 
+              class="card-subtitle" text-anchor="middle" opacity="0.5">♪</text>
         """
         else:
             # Placeholder if no image URL
             svg_content += f"""
         <rect x="{x + 8}" y="{y + img_y_offset}" width="{img_size}" height="{img_size}" 
-              fill="#404040" rx="6" ry="6"/>
+              fill="#333333" rx="8" ry="8"/>
+        <text x="{x + card_width/2}" y="{y + img_y_offset + img_size/2}" 
+              class="card-subtitle" text-anchor="middle" opacity="0.5">♪</text>
         """
 
-        # Text section
+        # Text section with wrapped text
         text_y = y + img_y_offset + img_size + 18
 
-        svg_content += f"""
-        <!-- Title -->
-        <text x="{x + card_width/2}" y="{text_y}" class="card-title" text-anchor="middle">
-            {display_name}
+        # Title (up to 2 lines)
+        for line_idx, line in enumerate(name_lines):
+            svg_content += f"""
+        <text x="{x + card_width/2}" y="{text_y + (line_idx * 13)}" class="card-title" text-anchor="middle">
+            {line}
         </text>
-        
-        <!-- Subtitle -->
-        <text x="{x + card_width/2}" y="{text_y + 14}" class="card-subtitle" text-anchor="middle">
-            {subtitle_text}
+        """
+
+        # Subtitle (1 line)
+        subtitle_y = text_y + (len(name_lines) * 13) + 10
+        if subtitle_lines:
+            svg_content += f"""
+        <text x="{x + card_width/2}" y="{subtitle_y}" class="card-subtitle" text-anchor="middle">
+            {subtitle_lines[0]}
         </text>
-    </g>
-    """
+        """
+
+        svg_content += "</g>"
 
     svg_footer = "</svg>"
 
