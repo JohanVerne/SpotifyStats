@@ -1,95 +1,106 @@
-from PIL import Image, ImageDraw, ImageFont
-
-
-def create_spotify_infographic(stats_data: dict) -> Image.Image:
+# Create an SVG infographic for the requested content type and time range
+def create_spotify_infographic(
+    stats_data: dict, section_type: str = "artists", time_range: str = "short_term"
+) -> str:
+    svg_header = """<svg width="800" height="200" xmlns="http://www.w3.org/2000/svg">
+    <rect width="800" height="200" fill="#121212"/>
+    <style>
+        .title { fill: #1DB954; font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; }
+        .header { fill: #FFFFFF; font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; }
+        .text { fill: #FFFFFF; font-family: Arial, sans-serif; font-size: 16px; }
+        .subtext { fill: #969696; font-family: Arial, sans-serif; font-size: 14px; }
+    </style>
     """
-    Generate an infographic from Spotify stats data
-    Returns: PIL Image object
-    """
-    # Canvas settings
-    width, height = 800, 600
-    bg_color = (18, 18, 18)  # Spotify dark theme
-    accent_color = (30, 215, 96)  # Spotify green
-    text_color = (255, 255, 255)
-
-    # Create image
-    img = Image.new("RGB", (width, height), bg_color)
-    draw = ImageDraw.Draw(img)
-
-    # Try to load fonts (fallback to default if not available)
-    try:
-        title_font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36
-        )
-        header_font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24
-        )
-        text_font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18
-        )
-    except:
-        title_font = ImageFont.load_default()
-        header_font = ImageFont.load_default()
-        text_font = ImageFont.load_default()
-
-    # Title
-    draw.text((20, 20), "My Spotify Stats", fill=accent_color, font=title_font)
-
-    y_offset = 80
 
     # Top Artists Section
-    draw.text(
-        (20, y_offset), "🎤 Top Artists (Short Term)", fill=text_color, font=header_font
-    )
-    y_offset += 40
-
-    top_artists = stats_data.get("top_artists", {}).get("short_term", {})
-    for i, (idx, artist) in enumerate(list(top_artists.items())[:5]):
-        artist_name = artist.get("name", "Unknown")
-        genre = artist.get("genre", "Unknown")
-
-        # Truncate long names
-        if len(artist_name) > 30:
-            artist_name = artist_name[:27] + "..."
-
-        draw.text(
-            (40, y_offset), f"{i+1}. {artist_name}", fill=text_color, font=text_font
-        )
-        draw.text((450, y_offset), f"({genre})", fill=(150, 150, 150), font=text_font)
-        y_offset += 30
-
-    y_offset += 20
+    if section_type == "artists":
+        if time_range == "short_term":  # Get the correct time range artist data
+            svg_content = (
+                '<text x="20" y="50" class="title">My Recent Top Artists</text>'
+            )
+            top_artists = stats_data.get("top_artists", {}).get("short_term", {})
+        elif time_range == "long_term":
+            svg_content = (
+                '<text x="20" y="50" class="title">My All-Time Top Artists</text>'
+            )
+            top_artists = stats_data.get("top_artists", {}).get("long_term", {})
+        else:
+            return None
+        y = 30
+        for i, (idx, artist) in enumerate(list(top_artists.items())[:5]):
+            name = artist.get("name", "Unknown")
+            svg_content += f'<text x="40" y="{y}" class="text">{i+1}. {name}</text>'
+            y += 30
+            genre = artist.get("genre", "Unknown")
+            svg_content += f'<text x="450" y="{y}" class="subtext">({genre})</text>'
+            y += 30
+            image = artist.get("image", None)
+            if image:
+                svg_content += (
+                    f'<image href="{image}" x="10" y="{y-20}" height="20" width="20"/>'
+                )
+            else:
+                svg_content += f'<image href="images/Spotify.svg" x="10" y="{y-20}" height="20" width="20"/>'
 
     # Top Songs Section
-    draw.text(
-        (20, y_offset), "🎵 Top Songs (Short Term)", fill=text_color, font=header_font
-    )
-    y_offset += 40
+    elif section_type == "top_songs":
+        if time_range == "short_term":  # Get the correct time range song data
+            svg_content = '<text x="20" y="50" class="title">My Recent Top Songs</text>'
+            top_songs = stats_data.get("top_songs", {}).get("short_term", {})
+        elif time_range == "long_term":
+            svg_content = (
+                '<text x="20" y="50" class="title">My All-Time Top Songs</text>'
+            )
+            top_songs = stats_data.get("top_songs", {}).get("long_term", {})
+        else:
+            return None
 
-    top_songs = stats_data.get("top_songs", {}).get("short_term", {})
-    for i, (idx, song) in enumerate(list(top_songs.items())[:5]):
-        song_name = song.get("name", "Unknown")
-        artist_name = song.get("artist", "Unknown")
+        y = 30
+        for i, (idx, song) in enumerate(list(top_songs.items())[:5]):
+            name = song.get("name", "Unknown")
+            svg_content += f'<text x="40" y="{y}" class="text">{i+1}. {name}</text>'
+            y += 30
+            artist_name = song.get("artist", "Unknown")
+            svg_content += (
+                f'<text x="450" y="{y}" class="subtext">by {artist_name}</text>'
+            )
+            y += 30
+            image = song.get("image", None)
+            if image:
+                svg_content += (
+                    f'<image href="{image}" x="10" y="{y-20}" height="20" width="20"/>'
+                )
+            else:
+                svg_content += f'<image href="images/Spotify.svg" x="10" y="{y-20}" height="20" width="20"/>'
 
-        if len(song_name) > 25:
-            song_name = song_name[:22] + "..."
-        if len(artist_name) > 20:
-            artist_name = artist_name[:17] + "..."
-
-        draw.text(
-            (40, y_offset), f"{i+1}. {song_name}", fill=text_color, font=text_font
+    # Last Played Albums Section
+    elif section_type == "last_albums":
+        svg_content = (
+            '<text x="20" y="50" class="title">My Recently Played Albums</text>'
         )
-        draw.text(
-            (450, y_offset), f"by {artist_name}", fill=(150, 150, 150), font=text_font
-        )
-        y_offset += 30
+        last_albums = stats_data.get("last_albums", {})
+        y = 30
+        for i, (idx, album) in enumerate(list(last_albums.items())[:5]):
+            name = album.get("name", "Unknown")
+            svg_content += f'<text x="40" y="{y}" class="text">{i+1}. {name}</text>'
+            y += 30
+            artist_name = album.get("artist", "Unknown")
+            svg_content += (
+                f'<text x="450" y="{y}" class="subtext">by {artist_name}</text>'
+            )
+            y += 30
+            image = album.get("image", None)
+            if image:
+                svg_content += (
+                    f'<image href="{image}" x="10" y="{y-20}" height="20" width="20"/>'
+                )
+            else:
+                svg_content += f'<image href="images/Spotify.svg" x="10" y="{y-20}" height="20" width="20"/>'
 
-    # Footer
-    draw.text(
-        (20, height - 40),
-        "Generated by SpotifyStats API",
-        fill=(100, 100, 100),
-        font=text_font,
-    )
+    else:
+        return None
 
-    return img
+    svg_footer = "</svg>"
+
+    # return complete SVG
+    return svg_header + svg_content + svg_footer

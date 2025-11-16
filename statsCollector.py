@@ -82,17 +82,24 @@ def get_user_top_songs(sp: spotipy.Spotify) -> dict:
 
 
 def get_user_last_listenedTo_albums(sp: spotipy.Spotify) -> dict:
-    # Get User's Last Saved Albums names and artists names
+    # Get User's Last Saved Albums names and cover art and artists names
     lastSavedAlbumsData = {}
-    print("|====== Last Saved Albums ======|")
+    print("|====== Last Played Albums ======|")
     savedAlbums = sp.current_user_saved_albums(limit=3)
     for id, item in enumerate(savedAlbums["items"]):
         album = item["album"]
         lastSavedAlbumsData[id] = {
             "name": album["name"],
             "artist": album["artists"][0]["name"],
+            "image": album["images"][0]["url"],
         }
-        print(id, album["name"], "//", album["artists"][0]["name"])
+        print(
+            id,
+            album["name"],
+            "//",
+            album["artists"][0]["name"],
+            album["images"][0]["url"],
+        )
     print()
     return lastSavedAlbumsData
 

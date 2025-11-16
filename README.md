@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="images/Spotify.svg", height=80px >
-  <h1> SpotifyStats</h1>
+  <img src="images/Spotify.svg", height=160px >
+  <h1> SpotifyREADMEStats</h1>
 
 <a href="">![Python](https://img.shields.io/badge/python-3.14-blue.svg)</a>
 <a href="">![Flask](https://img.shields.io/badge/flask-3.1.0-green.svg)</a>

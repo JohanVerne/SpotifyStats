@@ -1,5 +1,5 @@
 # Simple API used to access stats via HTTP requests
-from flask import Flask, jsonify, redirect, send_file
+from flask import Flask, jsonify, redirect, Response, request
 from io import BytesIO
 import sys
 
@@ -19,17 +19,17 @@ def get_stats():
 @app.route("/stats")  # Endpoint to get infographics stats
 def create_stats_image():
     stats = statsCollector.main()
-    image = statsImageGenerator.create_spotify_infographic(stats)
-    img_io = BytesIO()
-    image.save(img_io, "PNG")
-    img_io.seek(0)
-
-    return send_file(img_io, mimetype="image/png")
+    requestedContentType = request.args.get("type", None)
+    requestedContentTimerange = request.args.get("range", None)
+    svgImage = statsImageGenerator.create_spotify_infographic(
+        stats, requestedContentType, requestedContentTimerange
+    )
+    return Response(svgImage, mimetype="image/svg+xml")
 
 
 @app.route("/")  # Home endpoint
 def home():
-    return redirect("https://github.com/JohanVerne/SpotifyStats")
+    return redirect("https://github.com/JohanVerne/SpotifyREADMEStats")
 
 
 if __name__ == "__main__":
